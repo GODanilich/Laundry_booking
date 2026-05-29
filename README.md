@@ -25,7 +25,7 @@
 Требования:
 
 - Docker Desktop с поддержкой Swarm.
-- PowerShell.
+- PowerShell или bash.
 
 Собрать образы:
 
@@ -33,10 +33,22 @@
 .\scripts\build-images.ps1
 ```
 
+Linux/macOS:
+
+```bash
+./scripts/build-images.sh
+```
+
 Развернуть stack:
 
 ```powershell
 .\scripts\deploy-stack.ps1
+```
+
+Linux/macOS:
+
+```bash
+./scripts/deploy-stack.sh
 ```
 
 Проверить сервисы:
@@ -80,6 +92,12 @@ password: Admin123
 .\scripts\demo-rolling-update.ps1
 ```
 
+Linux/macOS:
+
+```bash
+./scripts/demo-rolling-update.sh
+```
+
 Наблюдать процесс:
 
 ```powershell
@@ -95,6 +113,12 @@ docker stack services laundry
 .\scripts\smoke-test.ps1
 ```
 
+Linux/macOS:
+
+```bash
+./scripts/smoke-test.sh
+```
+
 Скрипт логинится администратором, создает/берет машину, генерирует слоты, регистрирует тестового пользователя, создает бронирование и проверяет audit/analytics.
 
 
@@ -102,6 +126,12 @@ docker stack services laundry
 
 ```powershell
 .\scripts\remove-stack.ps1
+```
+
+Linux/macOS:
+
+```bash
+./scripts/remove-stack.sh
 ```
 
 Volumes намеренно не удаляются, чтобы данные PostgreSQL/Redis/Kafka не пропадали случайно.
