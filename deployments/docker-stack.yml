@@ -1,0 +1,311 @@
+version: "3.8"
+
+services:
+  gateway-service:
+    image: laundry/gateway-service:local
+    environment:
+      SERVICE_NAME: gateway-service
+      HTTP_PORT: "8080"
+      JWT_SECRET: dev-secret-change-me
+      IDENTITY_GRPC_TARGET: identity-service:50051
+      MACHINE_GRPC_TARGET: machine-service:50051
+      SCHEDULE_GRPC_TARGET: schedule-service:50051
+      BOOKING_GRPC_TARGET: booking-service:50051
+      EVENT_WORKER_GRPC_TARGET: event-worker-service:50051
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    networks:
+      - public-net
+      - internal-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  identity-service:
+    image: laundry/identity-service:local
+    environment:
+      SERVICE_NAME: identity-service
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+      JWT_SECRET: dev-secret-change-me
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: Admin123
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    networks:
+      - internal-net
+      - data-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  machine-service:
+    image: laundry/machine-service:local
+    environment:
+      SERVICE_NAME: machine-service
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      SEED_DEMO_DATA: "true"
+    networks:
+      - internal-net
+      - data-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  schedule-service:
+    image: laundry/schedule-service:local
+    environment:
+      SERVICE_NAME: schedule-service
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SLOT_LOCK_TTL_SECONDS: "300"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    networks:
+      - internal-net
+      - data-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  booking-service:
+    image: laundry/booking-service:local
+    environment:
+      SERVICE_NAME: booking-service
+      SERVICE_VERSION: v1
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      BOOKING_EVENTS_TOPIC: booking-events
+      PAYMENT_EVENTS_TOPIC: payment-events
+      MACHINE_GRPC_TARGET: machine-service:50051
+      SCHEDULE_GRPC_TARGET: schedule-service:50051
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    networks:
+      - internal-net
+      - data-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  event-worker-service:
+    image: laundry/event-worker-service:local
+    environment:
+      SERVICE_NAME: event-worker-service
+      HTTP_PORT: "8000"
+      GRPC_PORT: "50051"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      BOOKING_EVENTS_TOPIC: booking-events
+      PAYMENT_EVENTS_TOPIC: payment-events
+      PAYMENT_SUCCESS_RATE: "0.8"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    networks:
+      - internal-net
+      - data-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: laundry
+      POSTGRES_USER: laundry
+      POSTGRES_PASSWORD: laundry
+    configs:
+      - source: postgres-init
+        target: /docker-entrypoint-initdb.d/init.sql
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - data-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laundry -d laundry"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - data-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - internal-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - target: 16686
+        published: 16686
+        protocol: tcp
+        mode: ingress
+    networks:
+      - public-net
+      - internal-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+configs:
+  postgres-init:
+    file: ../migrations/init.sql
+
+volumes:
+  postgres-data:
+  redis-data:
+  kafka-data:
+
+networks:
+  public-net:
+    driver: overlay
+  internal-net:
+    driver: overlay
+  data-net:
+    driver: overlay

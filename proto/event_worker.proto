@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+service EventWorkerService {
+  rpc GetAuditLog(GetAuditLogRequest) returns (AuditLogResponse);
+  rpc GetAnalyticsSummary(GetAnalyticsSummaryRequest) returns (AnalyticsSummaryResponse);
+}
+
+message GetAuditLogRequest {
+  string event_type = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message AuditRecord {
+  string id = 1;
+  string event_type = 2;
+  string aggregate_id = 3;
+  string user_id = 4;
+  string payload = 5;
+  string created_at = 6;
+}
+
+message AuditLogResponse {
+  repeated AuditRecord items = 1;
+}
+
+message GetAnalyticsSummaryRequest {}
+
+message AnalyticsSummaryResponse {
+  int32 bookings_count = 1;
+  int32 cancelled_count = 2;
+  int32 payment_success_count = 3;
+  int32 payment_failed_count = 4;
+  double revenue = 5;
+}
+

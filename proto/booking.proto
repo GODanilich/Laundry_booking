@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+service BookingService {
+  rpc CreateBooking(CreateBookingRequest) returns (BookingResponse);
+  rpc CancelBooking(CancelBookingRequest) returns (BookingResponse);
+  rpc ListUserBookings(ListUserBookingsRequest) returns (BookingListResponse);
+  rpc ListAllBookings(ListAllBookingsRequest) returns (BookingListResponse);
+}
+
+message CreateBookingRequest {
+  string user_id = 1;
+  string role = 2;
+  string machine_id = 3;
+  string slot_id = 4;
+  string idempotency_key = 5;
+}
+
+message CancelBookingRequest {
+  string booking_id = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message ListUserBookingsRequest {
+  string user_id = 1;
+}
+
+message ListAllBookingsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message BookingResponse {
+  string id = 1;
+  string user_id = 2;
+  string machine_id = 3;
+  string slot_id = 4;
+  string status = 5;
+  double price = 6;
+  string service_version = 7;
+}
+
+message BookingListResponse {
+  repeated BookingResponse items = 1;
+}
+

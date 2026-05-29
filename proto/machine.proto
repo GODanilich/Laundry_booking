@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+service MachineService {
+  rpc CreateMachine(CreateMachineRequest) returns (MachineResponse);
+  rpc UpdateMachineStatus(UpdateMachineStatusRequest) returns (MachineResponse);
+  rpc ListMachines(ListMachinesRequest) returns (MachineListResponse);
+  rpc GetMachine(GetMachineRequest) returns (MachineResponse);
+}
+
+message CreateMachineRequest {
+  string name = 1;
+  string location = 2;
+  double capacity_kg = 3;
+}
+
+message UpdateMachineStatusRequest {
+  string machine_id = 1;
+  string status = 2;
+}
+
+message ListMachinesRequest {
+  string status = 1;
+}
+
+message GetMachineRequest {
+  string machine_id = 1;
+}
+
+message MachineResponse {
+  string id = 1;
+  string name = 2;
+  string location = 3;
+  double capacity_kg = 4;
+  string status = 5;
+}
+
+message MachineListResponse {
+  repeated MachineResponse items = 1;
+}
+

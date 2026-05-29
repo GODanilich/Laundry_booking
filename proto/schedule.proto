@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+service ScheduleService {
+  rpc GenerateSlots(GenerateSlotsRequest) returns (GenerateSlotsResponse);
+  rpc ListAvailableSlots(ListAvailableSlotsRequest) returns (SlotListResponse);
+  rpc LockSlot(LockSlotRequest) returns (SlotResponse);
+  rpc ConfirmSlot(ConfirmSlotRequest) returns (SlotResponse);
+  rpc ReleaseSlot(ReleaseSlotRequest) returns (SlotResponse);
+}
+
+message GenerateSlotsRequest {
+  string machine_id = 1;
+  string date = 2;
+  int32 slot_duration_minutes = 3;
+  string start_time = 4;
+  string end_time = 5;
+}
+
+message GenerateSlotsResponse {
+  int32 created_count = 1;
+}
+
+message ListAvailableSlotsRequest {
+  string machine_id = 1;
+  string date = 2;
+}
+
+message LockSlotRequest {
+  string slot_id = 1;
+  string booking_id = 2;
+}
+
+message ConfirmSlotRequest {
+  string slot_id = 1;
+  string booking_id = 2;
+}
+
+message ReleaseSlotRequest {
+  string slot_id = 1;
+  string booking_id = 2;
+}
+
+message SlotResponse {
+  string id = 1;
+  string machine_id = 2;
+  string starts_at = 3;
+  string ends_at = 4;
+  string status = 5;
+  string booking_id = 6;
+}
+
+message SlotListResponse {
+  repeated SlotResponse items = 1;
+}
+
